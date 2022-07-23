@@ -9,6 +9,14 @@
 *.user
 *.userosscache
 *.sln.docstates
+*.user
+_ReSharper.*
+bin
+*.obj
+DoorProject\obj\
+DoorProject\bin\
+Core\obj\
+Core\bin\
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
