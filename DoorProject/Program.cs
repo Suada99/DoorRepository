@@ -13,6 +13,8 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using Core.Services;
 using AutoMapper;
 using Infrastructure;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using DoorProject;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -66,15 +68,18 @@ builder.Services.AddSingleton(mapper);
 #endregion
 
 builder.Services.AddControllers();
+builder.Services.AddTransient<TokenManagerMiddleware>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-builder.Services.AddScoped<IRefreshTokenService,RefreshTokenService>();
+builder.Services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddScoped<IUserService, UserService>();
-
+builder.Services.AddScoped<IWorkContext, WorkContext>();
+builder.Services.AddScoped<IJWTTokenService, JWTTokenService>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Door", Version = "v1" });
+    
     c.AddSecurityDefinition("BearerAuth", new OpenApiSecurityScheme
     {
         Type = SecuritySchemeType.Http,
@@ -92,6 +97,9 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("Open", builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 });
+
+
+builder.Services.AddDistributedMemoryCache();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -106,9 +114,10 @@ if (builder.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseRouting();
+
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseMiddleware<TokenManagerMiddleware>();
 app.UseCors("Open");
 app.MapControllers();
 

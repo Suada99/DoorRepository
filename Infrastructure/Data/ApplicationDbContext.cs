@@ -14,7 +14,7 @@ namespace Infrastructure.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
-        public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<JWTToken> RefreshTokens { get; set; }
 
         protected async void OnModelCreating(ModelBuilder modelBuilder)
         {

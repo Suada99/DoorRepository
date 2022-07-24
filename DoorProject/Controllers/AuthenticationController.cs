@@ -3,6 +3,8 @@ using Core.Entities;
 using Core.Services;
 using DoorProject.Configurations;
 using DoorProject.Models.DTOs;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -13,29 +15,36 @@ using System.Text;
 
 namespace DoorProject.Controllers
 {
+
     [Route("api/[controller]")]
     [ApiController]
     public class AuthenticationController : ControllerBase
     {
+        private readonly SignInManager<User> _signInManager;
         private readonly UserManager<User> _userManager;
         private readonly JwtConfig _jwtConfig;
         private readonly TokenValidationParameters _tokenValidationParams;
-        private readonly IRefreshTokenService _refreshTokenService;
+        private readonly IJWTTokenService _jwtTokenService;
         private readonly IMapper _mapper;
+        private readonly IWorkContext _workContext;
 
-        public AuthenticationController(UserManager<User> userManager,
+        public AuthenticationController(SignInManager<User> signInManager, UserManager<User> userManager,
             IOptionsMonitor<JwtConfig> optionsMonitor,
-            TokenValidationParameters tokenValidationParams,
-            IRefreshTokenService refreshTokenService, IMapper mapper
+             TokenValidationParameters tokenValidationParams,
+            IJWTTokenService refreshTokenService,
+            IMapper mapper,
+            IWorkContext workContext
             )
         {
+            _signInManager = signInManager;
             _userManager = userManager;
             _jwtConfig = optionsMonitor.CurrentValue;
             _tokenValidationParams = tokenValidationParams;
-            _refreshTokenService = refreshTokenService;
+            _jwtTokenService = refreshTokenService;
             _mapper = mapper;
+            _workContext = workContext;
         }
-
+        [AllowAnonymous]
         [HttpPost]
         [Route("Register")]
         public async Task<IActionResult> Register([FromBody] UserRegistrationDto user)
@@ -57,12 +66,11 @@ namespace DoorProject.Controllers
                 }
 
                 var mappedUser = _mapper.Map<User>(user);
+                mappedUser.EmailConfirmed = true;
                 var isCreated = await _userManager.CreateAsync(mappedUser, user.Password);
                 if (isCreated.Succeeded)
                 {
-                    var jwtToken = await GenerateJwtToken(mappedUser);
-
-                    return Ok(jwtToken);
+                    return Ok();
                 }
                 else
                 {
@@ -83,6 +91,7 @@ namespace DoorProject.Controllers
             });
         }
 
+        [AllowAnonymous]
         [HttpPost]
         [Route("Login")]
         public async Task<IActionResult> Login([FromBody] UserLoginRequest user)
@@ -102,9 +111,9 @@ namespace DoorProject.Controllers
                     });
                 }
 
-                var isCorrect = await _userManager.CheckPasswordAsync(existingUser, user.Password);
+                var result = await _signInManager.PasswordSignInAsync(existingUser.UserName, user.Password, false, lockoutOnFailure: false);
 
-                if (!isCorrect)
+                if (!result.Succeeded)
                 {
                     return BadRequest(new RegistrationResponse()
                     {
@@ -116,6 +125,7 @@ namespace DoorProject.Controllers
                 }
 
                 var jwtToken = await GenerateJwtToken(existingUser);
+
 
                 return Ok(jwtToken);
             }
@@ -129,40 +139,23 @@ namespace DoorProject.Controllers
             });
         }
 
+
+
+        [Authorize]
         [HttpPost]
-        [Route("RefreshToken")]
-        public async Task<IActionResult> RefreshToken([FromBody] TokenRequest tokenRequest)
+        [Route("Logout")]
+        public async Task<IActionResult> Logout()
         {
-            if (ModelState.IsValid)
+            try
             {
-                var result = await VerifyAndGenerateToken(tokenRequest);
-
-                if (result == null)
-                {
-                    return BadRequest(new RegistrationResponse()
-                    {
-                        Errors = new List<string>() {
-                            "Invalid tokens"
-                        },
-                        Success = false
-                    });
-                }
-
-                if (result.Errors != null && result.Errors.Count > 0)
-                {
-                    return BadRequest(result);
-                }
-
-                return Ok(result);
+                await _signInManager.SignOutAsync();
+                await _workContext.DeactivateCurrentTokenAsync();
+                return Ok();
             }
-
-            return BadRequest(new RegistrationResponse()
+            catch (Exception e)
             {
-                Errors = new List<string>() {
-                    "Invalid payload"
-                },
-                Success = false
-            });
+                return BadRequest("Error happened: " + e.Message);
+            }
         }
 
 
@@ -181,188 +174,30 @@ namespace DoorProject.Controllers
                     new Claim(JwtRegisteredClaimNames.Sub, user.Email),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
                 }),
-                Expires = DateTime.UtcNow.AddSeconds(30), // 5-10 
+                Expires = DateTime.UtcNow.AddMinutes(5),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
             var token = jwtTokenHandler.CreateToken(tokenDescriptor);
             var jwtToken = jwtTokenHandler.WriteToken(token);
-
-            var refreshToken = new RefreshToken()
+            var generatedToken = new JWTToken()
             {
-                JwtId = token.Id,
-                IsUsed = false,
-                IsRevorked = false,
                 UserId = user.Id,
                 AddedDate = DateTime.UtcNow,
-                ExpiryDate = DateTime.UtcNow.AddMonths(6),
-                Token = RandomString(35) + Guid.NewGuid()
+                ExpiryDate = tokenDescriptor.Expires.Value,
+                Token = jwtToken
             };
 
-            await _refreshTokenService.InsertRefreshTokenAsync(refreshToken);
-           
+            await _jwtTokenService.InsertJWTTokenAsync(generatedToken);
+
 
             return new AuthResult()
             {
                 Token = jwtToken,
-                Success = true,
-                RefreshToken = refreshToken.Token
+                Success = true
             };
         }
 
-        private async Task<AuthResult> VerifyAndGenerateToken(TokenRequest tokenRequest)
-        {
-            var jwtTokenHandler = new JwtSecurityTokenHandler();
 
-            try
-            {
-                // Validation 1 - Validation JWT token format
-                _tokenValidationParams.ValidateLifetime = false;
-                var tokenInVerification = jwtTokenHandler.ValidateToken(tokenRequest.Token, _tokenValidationParams, out var validatedToken);
-                _tokenValidationParams.ValidateLifetime = true;
-
-                // Validation 2 - Validate encryption alg
-                if (validatedToken is JwtSecurityToken jwtSecurityToken)
-                {
-                    var result = jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase);
-
-                    if (result == false)
-                    {
-                        return null;
-                    }
-                }
-
-                // Validation 3 - validate expiry date
-                var utcExpiryDate = long.Parse(tokenInVerification.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Exp).Value);
-
-                var expiryDate = UnixTimeStampToDateTime(utcExpiryDate);
-
-                if (expiryDate > DateTime.UtcNow)
-                {
-                    return new AuthResult()
-                    {
-                        Success = false,
-                        Errors = new List<string>() {
-                            "Token has not yet expired"
-                        }
-                    };
-                }
-
-                // validation 4 - validate existence of the token
-                var storedToken = await _refreshTokenService.GetRefreshTokenByRefreshTokeAsync(tokenRequest.RefreshToken); //TODO
-
-                if (storedToken == null)
-                {
-                    return new AuthResult()
-                    {
-                        Success = false,
-                        Errors = new List<string>() {
-                            "Token does not exist"
-                        }
-                    };
-                }
-
-                // Validation 5 - validate if used
-                if (storedToken.IsUsed)
-                {
-                    return new AuthResult()
-                    {
-                        Success = false,
-                        Errors = new List<string>() {
-                            "Token has been used"
-                        }
-                    };
-                }
-
-                // Validation 6 - validate if revoked
-                if (storedToken.IsRevorked)
-                {
-                    return new AuthResult()
-                    {
-                        Success = false,
-                        Errors = new List<string>() {
-                            "Token has been revoked"
-                        }
-                    };
-                }
-
-                // Validation 7 - validate the id
-                var jti = tokenInVerification.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
-
-                if (storedToken.JwtId != jti)
-                {
-                    return new AuthResult()
-                    {
-                        Success = false,
-                        Errors = new List<string>() {
-                            "Token doesn't match"
-                        }
-                    };
-                }
-
-                // Validation 8 - validate stored token expiry date
-                if (storedToken.ExpiryDate < DateTime.UtcNow)
-                {
-                    return new AuthResult()
-                    {
-                        Success = false,
-                        Errors = new List<string>() {
-                            "Refresh token has expired"
-                        }
-                    };
-                }
-
-                // update current token 
-
-                storedToken.IsUsed = true;
-
-                await _refreshTokenService.UpdateRefreshTokenAsync(storedToken);
-
-                // Generate a new token
-                var dbUser = await _userManager.FindByIdAsync(storedToken.UserId.ToString());//TODO
-                return await GenerateJwtToken(dbUser);
-            }
-            catch (Exception ex)
-            {
-                if (ex.Message.Contains("Lifetime validation failed. The token is expired."))
-                {
-
-                    return new AuthResult()
-                    {
-                        Success = false,
-                        Errors = new List<string>() {
-                            "Token has expired please re-login"
-                        }
-                    };
-
-                }
-                else
-                {
-                    return new AuthResult()
-                    {
-                        Success = false,
-                        Errors = new List<string>() {
-                            "Something went wrong."
-                        }
-                    };
-                }
-            }
-        }
-
-        private DateTime UnixTimeStampToDateTime(long unixTimeStamp)
-        {
-            var dateTimeVal = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
-            dateTimeVal = dateTimeVal.AddSeconds(unixTimeStamp).ToUniversalTime();
-
-            return dateTimeVal;
-        }
-
-        private string RandomString(int length)
-        {
-            var random = new Random();
-            var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            return new string(Enumerable.Repeat(chars, length)
-                .Select(x => x[random.Next(x.Length)]).ToArray());
-        }
     }
 }
