@@ -1,4 +1,5 @@
-﻿using Core.Entities;
+﻿using AutoMapper;
+using Core.Entities;
 using Core.Services;
 using DoorProject.Configurations;
 using DoorProject.Models.DTOs;
@@ -20,17 +21,19 @@ namespace DoorProject.Controllers
         private readonly JwtConfig _jwtConfig;
         private readonly TokenValidationParameters _tokenValidationParams;
         private readonly IRefreshTokenService _refreshTokenService;
+        private readonly IMapper _mapper;
 
         public AuthenticationController(UserManager<User> userManager,
             IOptionsMonitor<JwtConfig> optionsMonitor,
             TokenValidationParameters tokenValidationParams,
-            IRefreshTokenService refreshTokenService
+            IRefreshTokenService refreshTokenService, IMapper mapper
             )
         {
             _userManager = userManager;
             _jwtConfig = optionsMonitor.CurrentValue;
             _tokenValidationParams = tokenValidationParams;
             _refreshTokenService = refreshTokenService;
+            _mapper = mapper;
         }
 
         [HttpPost]
@@ -53,11 +56,11 @@ namespace DoorProject.Controllers
                     });
                 }
 
-                var newUser = new User() { Email = user.Email, UserName = user.Username };
-                var isCreated = await _userManager.CreateAsync(newUser, user.Password);
+                var mappedUser = _mapper.Map<User>(user);
+                var isCreated = await _userManager.CreateAsync(mappedUser, user.Password);
                 if (isCreated.Succeeded)
                 {
-                    var jwtToken = await GenerateJwtToken(newUser);
+                    var jwtToken = await GenerateJwtToken(mappedUser);
 
                     return Ok(jwtToken);
                 }

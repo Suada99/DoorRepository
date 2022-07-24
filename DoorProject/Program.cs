@@ -11,7 +11,8 @@ using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Core.Services;
-using Core;
+using AutoMapper;
+using Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,6 +52,18 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddIdentity<User,Role>(options => options.SignIn.RequireConfirmedAccount = true)
             .AddEntityFrameworkStores<ApplicationDbContext>();
+
+#region Auto mapper
+
+var mapperConfig = new MapperConfiguration(mc =>
+{
+    mc.AddProfile(new MappingProfile());
+});
+
+IMapper mapper = mapperConfig.CreateMapper();
+builder.Services.AddSingleton(mapper);
+
+#endregion
 
 builder.Services.AddControllers();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
