@@ -3,7 +3,6 @@ using Core.Entities;
 using Core.Services;
 using DoorProject.Configurations;
 using DoorProject.Models.DTOs;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -44,6 +43,7 @@ namespace DoorProject.Controllers
             _mapper = mapper;
             _workContext = workContext;
         }
+
         [AllowAnonymous]
         [HttpPost]
         [Route("Register")]
@@ -64,7 +64,7 @@ namespace DoorProject.Controllers
                         Success = false
                     });
                 }
-
+                // Map requested data
                 var mappedUser = _mapper.Map<User>(user);
                 mappedUser.EmailConfirmed = true;
                 var isCreated = await _userManager.CreateAsync(mappedUser, user.Password);
@@ -126,7 +126,6 @@ namespace DoorProject.Controllers
 
                 var jwtToken = await GenerateJwtToken(existingUser);
 
-
                 return Ok(jwtToken);
             }
 
@@ -138,8 +137,6 @@ namespace DoorProject.Controllers
                 Success = false
             });
         }
-
-
 
         [Authorize]
         [HttpPost]
@@ -157,7 +154,6 @@ namespace DoorProject.Controllers
                 return BadRequest("Error happened: " + e.Message);
             }
         }
-
 
         private async Task<AuthResult> GenerateJwtToken(User user)
         {
@@ -190,14 +186,11 @@ namespace DoorProject.Controllers
 
             await _jwtTokenService.InsertJWTTokenAsync(generatedToken);
 
-
             return new AuthResult()
             {
                 Token = jwtToken,
                 Success = true
             };
         }
-
-
     }
 }

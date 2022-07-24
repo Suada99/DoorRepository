@@ -18,13 +18,11 @@ namespace Core.Services
             _jWTTokenService = jWTTokenService;
         }
 
-
         public virtual async Task<User> GetCurrentUserAsync()
         {
             var email = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Email);
             return await _userService.GetUserByEmailAsync(email);
         }
-
 
         public async Task<bool> IsCurrentActiveToken()
             => await IsActiveTokenAsync(GetCurrentTokenAsync());
@@ -42,9 +40,7 @@ namespace Core.Services
 
                 return true;
             }
-
             return false;
-
         }
 
         public async Task DeactivateTokenAsync(string token)
@@ -66,6 +62,5 @@ namespace Core.Services
         }
 
         public virtual bool IsAdmin { get; set; }
-
     }
 }

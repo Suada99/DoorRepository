@@ -16,6 +16,7 @@ namespace DoorProject.Controllers
         {
             this.workContext = workContext;
         }
+
         [HttpGet]
         [Route("OpenDoor")]
         public async Task<IActionResult> OpenDoor()
