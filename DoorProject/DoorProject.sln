@@ -11,8 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastructure", "..\Infras
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared", "..\Shared\Shared.csproj", "{06E829B4-1999-4A30-A3D5-266AAF0C38C6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TodoApp", "..\..\gittest\v8-refreshtokenswithJWT\TodoApp\TodoApp.csproj", "{C60E4258-F0B9-4F4C-9D5A-516BBD068153}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,10 +33,6 @@ Global
 		{06E829B4-1999-4A30-A3D5-266AAF0C38C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{06E829B4-1999-4A30-A3D5-266AAF0C38C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{06E829B4-1999-4A30-A3D5-266AAF0C38C6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C60E4258-F0B9-4F4C-9D5A-516BBD068153}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C60E4258-F0B9-4F4C-9D5A-516BBD068153}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C60E4258-F0B9-4F4C-9D5A-516BBD068153}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C60E4258-F0B9-4F4C-9D5A-516BBD068153}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

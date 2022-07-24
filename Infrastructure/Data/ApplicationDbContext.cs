@@ -6,18 +6,19 @@ using System.Reflection;
 
 namespace Infrastructure.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<User,Role,Guid>
+    public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-            :base(options)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }
 
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
-        
-        protected override async void OnModelCreating(ModelBuilder modelBuilder)
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
+
+        protected async void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<IdentityUserLogin<Guid>>().ToTable("UserLogins");
             modelBuilder.Entity<IdentityUserToken<Guid>>().ToTable("UserTokens");
             modelBuilder.Entity<IdentityUserClaim<Guid>>().ToTable("UserClaims");
