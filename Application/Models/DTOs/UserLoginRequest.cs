@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace DoorProject.Models.DTOs
+namespace Application.Models.DTOs
 {
     public class UserLoginRequest
     {

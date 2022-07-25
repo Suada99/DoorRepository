@@ -1,4 +1,4 @@
-﻿namespace DoorProject.Configurations
+﻿namespace Application.Models
 {
     public class AuthResult
     {

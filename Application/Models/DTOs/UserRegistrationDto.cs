@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace DoorProject.Models.DTOs
+namespace Application.Models.DTOs
 {
     public class UserRegistrationDto
     {
@@ -10,7 +10,7 @@ namespace DoorProject.Models.DTOs
         [EmailAddress]
         public string Email { get; set; }
         [Required]
-        [RegularExpression("(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{4,8}$", ErrorMessage = "Please try a stronger password")]
+        [RegularExpression("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\da-zA-Z]).{8,}$", ErrorMessage = $"Invalid Password! " + $"Password must be at least 8 characters long " + $" and contain at least one lowercase, one uppercase, one number and one special character.")] 
         public string Password { get; set; }
     }
 }

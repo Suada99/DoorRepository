@@ -1,4 +1,4 @@
-﻿namespace DoorProject.Models.DTOs
+﻿namespace Application.Models.DTOs
 {
     public class RoleDTO
     {

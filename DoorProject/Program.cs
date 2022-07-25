@@ -1,4 +1,3 @@
-using DoorProject.Configurations;
 using Infrastructure.Data;
 using Infrastructure.Repository;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +17,7 @@ using Core.Repositories;
 using Application.Services.Interfaces;
 using Application.Services.Interfacess;
 using Application.Services;
+using Application;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -81,6 +81,7 @@ builder.Services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IWorkContext, WorkContext>();
 builder.Services.AddScoped<IJWTTokenService, JWTTokenService>();
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
