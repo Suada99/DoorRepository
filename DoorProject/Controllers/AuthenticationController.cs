@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using Core.Entities;
-using Core.Services;
+using Core.Services.Interfaces;
 using DoorProject.Configurations;
 using DoorProject.Models.DTOs;
 using Microsoft.AspNetCore.Authorization;

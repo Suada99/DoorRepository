@@ -1,5 +1,5 @@
 ﻿using Core.Entities;
-using Core.Services;
+using Core.Services.Interfaces;
 using DoorProject.Models.DTOs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;

@@ -16,6 +16,7 @@ using Infrastructure;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using DoorProject;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Core.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -1,6 +1,6 @@
 ﻿using Core.Entities;
 
-namespace Core.Services
+namespace Core.Services.Interfaces
 {
     public interface IJWTTokenService
     {

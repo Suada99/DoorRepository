@@ -1,4 +1,5 @@
 ﻿using Core.Entities;
+using Core.Services.Interfaces;
 using Shared.Interfaces;
 
 namespace Core.Services

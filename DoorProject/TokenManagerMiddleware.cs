@@ -1,4 +1,4 @@
-﻿using Core.Services;
+﻿using Core.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using System.Net;
 
