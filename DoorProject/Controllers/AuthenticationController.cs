@@ -21,6 +21,7 @@ namespace DoorProject.Controllers
     {
         private readonly SignInManager<User> _signInManager;
         private readonly UserManager<User> _userManager;
+        private readonly RoleManager<Role> _roleManager;
         private readonly JwtConfig _jwtConfig;
         private readonly IJWTTokenService _jwtTokenService;
         private readonly IMapper _mapper;
@@ -30,7 +31,7 @@ namespace DoorProject.Controllers
             IOptionsMonitor<JwtConfig> optionsMonitor,
             IJWTTokenService refreshTokenService,
             IMapper mapper,
-            IWorkContext workContext)
+            IWorkContext workContext, RoleManager<Role> roleManager)
         {
             _signInManager = signInManager;
             _userManager = userManager;
@@ -38,6 +39,7 @@ namespace DoorProject.Controllers
             _jwtTokenService = refreshTokenService;
             _mapper = mapper;
             _workContext = workContext;
+            _roleManager = roleManager;
         }
 
         [AllowAnonymous]
