@@ -22,23 +22,19 @@ namespace DoorProject.Controllers
         private readonly SignInManager<User> _signInManager;
         private readonly UserManager<User> _userManager;
         private readonly JwtConfig _jwtConfig;
-        private readonly TokenValidationParameters _tokenValidationParams;
         private readonly IJWTTokenService _jwtTokenService;
         private readonly IMapper _mapper;
         private readonly IWorkContext _workContext;
 
         public AuthenticationController(SignInManager<User> signInManager, UserManager<User> userManager,
             IOptionsMonitor<JwtConfig> optionsMonitor,
-             TokenValidationParameters tokenValidationParams,
             IJWTTokenService refreshTokenService,
             IMapper mapper,
-            IWorkContext workContext
-            )
+            IWorkContext workContext)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _jwtConfig = optionsMonitor.CurrentValue;
-            _tokenValidationParams = tokenValidationParams;
             _jwtTokenService = refreshTokenService;
             _mapper = mapper;
             _workContext = workContext;
