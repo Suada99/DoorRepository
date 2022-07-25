@@ -1,6 +1,4 @@
-﻿using Core.Entities;
-using Core.Services.Interfaces;
-using DoorProject.Models.DTOs;
+﻿using Core.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,33 +19,43 @@ namespace DoorProject.Controllers
             _userService = userService;
         }
 
-        [HttpGet]
-        [Route("OpenDoor")]
-        public async Task<IActionResult> OpenDoor()
+        /// <summary>
+        /// Enter office
+        /// </summary>
+        /// <returns>Success true followed with a message if you entered in your office</returns>
+        [HttpPost]
+        [Route("EnterOffice")]
+        public async Task<IActionResult> EnterOffice()
         {
-            var result =await _workContext.GetCurrentUserAsync();
-            if (result != null)
+            var result = await _workContext.GetCurrentUserAsync();
+            if (result == null)
             {
-                result.InOffice = true;
-                await _userService.UpdateUserAsync(result);
+                return BadRequest("There is no logged in user.");
             }
-            return Ok($"Welcome {(await _workContext.GetCurrentUserAsync()).Email}");
+            result.InOffice = true;
+            await _userService.UpdateUserAsync(result);
+
+            return Ok($"Welcome {(await _workContext.GetCurrentUserAsync()).UserName}, you just entered in your office.");
         }
 
+        /// <summary>
+        /// Leave office
+        /// </summary>
+        /// <returns>Success true followed with a message if you left your office</returns>
+        [HttpPost]
+        [Route("LeaveOffice")]
+        public async Task<IActionResult> LeaveOffice()
+        {
+            var result = await _workContext.GetCurrentUserAsync();
+            if (result == null)
+            {
+                return BadRequest("There is no logged in user.");
+            }
+            result.InOffice = false;
+            await _userService.UpdateUserAsync(result);
 
-        //[HttpPost]
-        //[Route("AddRole")]
-        //public async Task<IActionResult> AddRole(User user)
-        //{
-        //    List<UserRoles> userRoles = new();
-        //    var result =await _userService.GetUserByEmailAsync(user.Email);
-        //    if (result != null)
-        //    {
-        //        if (result.InOffice)
-        //        {
-        //        }
-        //    }
-        //    return Ok($"Welcome {(await _workContext.GetCurrentUserAsync()).Email}");
-        //}
+            return Ok($"Goodbye {(await _workContext.GetCurrentUserAsync()).UserName}, you just left your office.");
+        }
+
     }
 }
