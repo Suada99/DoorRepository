@@ -1,6 +1,6 @@
 ﻿using Core.Entities;
 
-namespace Core.Services.Interfaces
+namespace Application.Services.Interfacess
 {
     public interface IWorkContext
     {

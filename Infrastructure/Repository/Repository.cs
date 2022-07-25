@@ -1,71 +1,48 @@
-﻿using Infrastructure.Data;
+﻿using Core.Repositories;
+using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using Shared.Interfaces;
 using System.Linq.Expressions;
 
 namespace Infrastructure.Repository
 {
+
     public class Repository<T> : IRepository<T> where T : class
     {
-
-        #region Fields
-
-        protected ApplicationDbContext Context;
-
-        #endregion
-
-        public Repository(ApplicationDbContext context)
+        protected ApplicationDbContext _context;
+        public Repository(ApplicationDbContext employeeContext)
         {
-            Context = context;
+            _context = employeeContext;
+        }
+        public async Task<T> AddAsync(T entity)
+        {
+            await _context.Set<T>().AddAsync(entity);
+            await _context.SaveChangesAsync();
+            return entity;
+        }
+        public async Task DeleteAsync(T entity)
+        {
+            _context.Set<T>().Remove(entity);
+            await _context.SaveChangesAsync();
+        }
+        public async Task<IReadOnlyList<T>> GetAllAsync()
+        {
+            return await _context.Set<T>().ToListAsync();
+        }
+        public async Task<T> GetByIdAsync(Guid id)
+        {
+            return await _context.Set<T>().FindAsync(id);
         }
 
-        #region Public Methods
-
-        public async Task<T> GetById(Guid id)
+        public async Task<IEnumerable<T>> GetWhereAsync(Expression<Func<T, bool>> predicate)
         {
-            return await Context.Set<T>().FindAsync(id);
+            return await _context.Set<T>().Where(predicate).ToListAsync();
         }
 
-        public async Task<T> FirstOrDefault(Expression<Func<T, bool>> predicate)
-            => await Context.Set<T>().FirstOrDefaultAsync(predicate);
-
-        public async Task Add(T entity)
+        public Task UpdateAsync(T entity)
         {
-            // await Context.AddAsync(entity);
-            await Context.Set<T>().AddAsync(entity);
-            await Context.SaveChangesAsync();
+            _context.Entry(entity).State = EntityState.Modified;
+            return _context.SaveChangesAsync();
         }
-
-        public Task Update(T entity)
-        {
-            // In case AsNoTracking is used
-            Context.Entry(entity).State = EntityState.Modified;
-            return Context.SaveChangesAsync();
-        }
-
-        public Task Remove(T entity)
-        {
-            Context.Set<T>().Remove(entity);
-            return Context.SaveChangesAsync();
-        }
-
-        public async Task<IEnumerable<T>> GetAll()
-        {
-            return await Context.Set<T>().ToListAsync();
-        }
-
-        public async Task<IEnumerable<T>> GetWhere(Expression<Func<T, bool>> predicate)
-        {
-            return await Context.Set<T>().Where(predicate).ToListAsync();
-        }
-
-        public Task<int> CountAll() => Context.Set<T>().CountAsync();
-
-        public Task<int> CountWhere(Expression<Func<T, bool>> predicate)
-            => Context.Set<T>().CountAsync(predicate);
-
-        #endregion
-
     }
 }
 

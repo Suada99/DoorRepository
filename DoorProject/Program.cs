@@ -1,7 +1,6 @@
 using DoorProject.Configurations;
 using Infrastructure.Data;
 using Infrastructure.Repository;
-using Shared.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
@@ -10,13 +9,15 @@ using Core.Entities;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using Core.Services;
 using AutoMapper;
 using Infrastructure;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using DoorProject;
 using Microsoft.AspNetCore.Mvc.Authorization;
-using Core.Services.Interfaces;
+using Core.Repositories;
+using Application.Services.Interfaces;
+using Application.Services.Interfacess;
+using Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

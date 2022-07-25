@@ -1,8 +1,8 @@
-﻿using Core.Entities;
-using Core.Services.Interfaces;
-using Shared.Interfaces;
+﻿using Application.Services.Interfaces;
+using Core.Entities;
+using Core.Repositories;
 
-namespace Core.Services
+namespace Application.Services
 {
     public partial class JWTTokenService : IJWTTokenService
     {
@@ -15,12 +15,12 @@ namespace Core.Services
 
         public virtual async Task<JWTToken> GeJWTTokenByIdAsync(Guid guid)
         {
-            return await _jwtTokenRepository.GetById(guid);
+            return await _jwtTokenRepository.GetByIdAsync(guid);
         }
 
         public virtual async Task<JWTToken> GetJWTTokenByTokenAsync(string jwtToken)
         {
-            return (await _jwtTokenRepository.GetWhere(x => x.Token == jwtToken)).OrderByDescending(x=>x.AddedDate).FirstOrDefault();
+            return (await _jwtTokenRepository.GetWhereAsync(x => x.Token == jwtToken)).OrderByDescending(x=>x.AddedDate).FirstOrDefault();
         }
 
 
@@ -29,7 +29,7 @@ namespace Core.Services
             if (refreshToken == null)
                 throw new ArgumentNullException("JWTToken");
 
-            await _jwtTokenRepository.Add(refreshToken);
+            await _jwtTokenRepository.AddAsync(refreshToken);
         }
 
         public virtual async Task UpdateJWTTokenAsync(JWTToken jwtToken)
@@ -37,7 +37,7 @@ namespace Core.Services
             if (jwtToken == null)
                 throw new ArgumentNullException("JWTToken");
 
-            await _jwtTokenRepository.Update(jwtToken);
+            await _jwtTokenRepository.UpdateAsync(jwtToken);
         }
 
         public virtual async Task DeleteJWTTokenAsync(JWTToken jwtToken)
@@ -45,7 +45,7 @@ namespace Core.Services
             if (jwtToken == null)
                 throw new ArgumentNullException("JWTToken");
 
-            await _jwtTokenRepository.Remove(jwtToken);
+            await _jwtTokenRepository.DeleteAsync(jwtToken);
         }
     }
 }

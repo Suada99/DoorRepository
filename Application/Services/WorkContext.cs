@@ -1,10 +1,11 @@
-﻿using Core.Entities;
-using Core.Services.Interfaces;
+﻿using Application.Services.Interfaces;
+using Application.Services.Interfacess;
+using Core.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 using System.Security.Claims;
 
-namespace Core.Services
+namespace Application.Services
 {
     public partial class WorkContext : IWorkContext
     {

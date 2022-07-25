@@ -1,8 +1,8 @@
-﻿using Core.Entities;
-using Core.Services.Interfaces;
-using Shared.Interfaces;
+﻿using Application.Services.Interfaces;
+using Core.Entities;
+using Core.Repositories;
 
-namespace Core.Services
+namespace Application.Services
 {
     public class UserService : IUserService
     {
@@ -15,12 +15,12 @@ namespace Core.Services
 
         public virtual async Task<User> GetUserByIdAsync(Guid guid)
         {
-            return await _userRepository.GetById(guid);
+            return await _userRepository.GetByIdAsync(guid);
         }
 
         public virtual async Task<User> GetUserByEmailAsync(string email)
         {
-            return (await _userRepository.GetWhere(x => x.Email == email)).FirstOrDefault();
+            return (await _userRepository.GetWhereAsync(x => x.Email == email)).FirstOrDefault();
         }
 
         public virtual async Task InsertUserAsync(User user)
@@ -28,7 +28,7 @@ namespace Core.Services
             if (user == null)
                 throw new ArgumentNullException("User");
 
-            await _userRepository.Add(user);
+            await _userRepository.AddAsync(user);
         }
 
         public virtual async Task UpdateUserAsync(User User)
@@ -36,7 +36,7 @@ namespace Core.Services
             if (User == null)
                 throw new ArgumentNullException("User");
 
-            await _userRepository.Update(User);
+            await _userRepository.UpdateAsync(User);
         }
 
         public virtual async Task DeleteUserAsync(User User)
@@ -44,7 +44,7 @@ namespace Core.Services
             if (User == null)
                 throw new ArgumentNullException("User");
 
-            await _userRepository.Remove(User);
+            await _userRepository.DeleteAsync(User);
         }
     }
 }
