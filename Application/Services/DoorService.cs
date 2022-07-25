@@ -1,21 +1,13 @@
 ﻿using Application.Services.Interfaces;
-using Application.Services.Interfacess;
 using Core.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Services
 {
     public class DoorService : IDoorService
     {
-        private readonly IWorkContext _workContext;
         private readonly IUserService _userService;
-        public DoorService(IWorkContext workContext, IUserService userService)
+        public DoorService(IUserService userService)
         {
-            _workContext = workContext;
             _userService = userService;
         }
 
