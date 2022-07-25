@@ -52,7 +52,7 @@ builder.Services.AddAuthentication(options =>
     jwt.TokenValidationParameters = tokenValidationParams;
 });
 
-builder.Services.AddIdentity<User,Role>(options => options.SignIn.RequireConfirmedAccount = true)
+builder.Services.AddIdentity<User, Role>(options => options.SignIn.RequireConfirmedAccount = true)
             .AddEntityFrameworkStores<ApplicationDbContext>();
 
 #region Auto mapper
@@ -74,12 +74,23 @@ builder.Services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IWorkContext, WorkContext>();
 builder.Services.AddScoped<IJWTTokenService, JWTTokenService>();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Door", Version = "v1" });
-    
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Door",
+        Version = "v1",
+        Description = "Api for managing entries in office",
+        Contact = new OpenApiContact
+        {
+            Name = "Suada",
+            Email = "kumrijasuada@gmail.com"
+        }
+    });
+
     c.AddSecurityDefinition("BearerAuth", new OpenApiSecurityScheme
     {
         Type = SecuritySchemeType.Http,
