@@ -12,12 +12,12 @@ namespace DoorProject.Controllers
     public class DoorController : ControllerBase
     {
         private readonly IWorkContext _workContext;
-        private readonly IUserService _userService;
+        private readonly IDoorService _doorService;
 
-        public DoorController(IWorkContext workContext, IUserService userService)
+        public DoorController(IWorkContext workContext, IDoorService doorService)
         {
             _workContext = workContext;
-            _userService = userService;
+            _doorService = doorService;
         }
 
         /// <summary>
@@ -28,15 +28,18 @@ namespace DoorProject.Controllers
         [Route("EnterOffice")]
         public async Task<IActionResult> EnterOffice()
         {
-            var result = await _workContext.GetCurrentUserAsync();
-            if (result == null)
+            var loggedUser = await _workContext.GetCurrentUserAsync();
+            if (loggedUser == null)
             {
                 return BadRequest("There is no logged in user.");
             }
-            result.InOffice = true;
-            await _userService.UpdateUserAsync(result);
+            var result = await _doorService.EnterOfficeAsync(loggedUser);
+            if (result.Success)
+            {
+                return Ok($"Welcome {result.Data.UserName}, you just entered in your office.");
+            }
 
-            return Ok($"Welcome {(await _workContext.GetCurrentUserAsync()).UserName}, you just entered in your office.");
+            return StatusCode((int)result.CommandError.HttpCode, result.CommandError);
         }
 
         /// <summary>
@@ -47,15 +50,18 @@ namespace DoorProject.Controllers
         [Route("LeaveOffice")]
         public async Task<IActionResult> LeaveOffice()
         {
-            var result = await _workContext.GetCurrentUserAsync();
-            if (result == null)
+            var loggedUser = await _workContext.GetCurrentUserAsync();
+            if (loggedUser == null)
             {
                 return BadRequest("There is no logged in user.");
             }
-            result.InOffice = false;
-            await _userService.UpdateUserAsync(result);
+            var result = await _doorService.EnterOfficeAsync(loggedUser);
+            if (result.Success)
+            {
+                return Ok($"Goodbye {result.Data.UserName}, you just left your office.");
+            }
 
-            return Ok($"Goodbye {(await _workContext.GetCurrentUserAsync()).UserName}, you just left your office.");
+            return StatusCode((int)result.CommandError.HttpCode, result.CommandError);
         }
 
     }
