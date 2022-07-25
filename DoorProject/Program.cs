@@ -15,6 +15,7 @@ using AutoMapper;
 using Infrastructure;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using DoorProject;
+using Microsoft.AspNetCore.Mvc.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,7 +68,11 @@ builder.Services.AddSingleton(mapper);
 
 #endregion
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(opt =>
+{
+    var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+    opt.Filters.Add(new AuthorizeFilter(policy));
+});
 builder.Services.AddTransient<TokenManagerMiddleware>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();

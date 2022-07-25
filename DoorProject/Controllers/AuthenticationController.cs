@@ -51,7 +51,7 @@ namespace DoorProject.Controllers
         {
             if (ModelState.IsValid)
             {
-                // We can utilise the model
+                // Verify if requested user is not yet registered
                 var existingUser = await _userManager.FindByEmailAsync(user.Email);
 
                 if (existingUser != null)
