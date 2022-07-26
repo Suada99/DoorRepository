@@ -9,5 +9,6 @@ namespace Core.Entities
         public TagStatus Status { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? ExpireDate { get; set; }
+        public bool Deactivated { get; set; }
     }
 }
