@@ -24,6 +24,7 @@ namespace DoorProject.Controllers
         {
             if (ModelState.IsValid)
             {
+                // Invoke AuthenticationService
                 var result = await _authenticationService.RegisterUserAsync(user);
                 if (result.Success)
                 {
@@ -31,13 +32,7 @@ namespace DoorProject.Controllers
                 }
                 return StatusCode((int)result.CommandError.HttpCode, result.CommandError);
             }
-            return BadRequest(new RegistrationResponse()
-            {
-                Errors = new List<string>() {
-                        "Invalid payload"
-                    },
-                Success = false
-            });
+            return BadRequest(ModelState);
         }
 
         [AllowAnonymous]
@@ -47,6 +42,7 @@ namespace DoorProject.Controllers
         {
             if (ModelState.IsValid)
             {
+                // Invoke AuthenticationService
                 var result = await _authenticationService.LogInUserAsync(user);
 
                 if (result.Success)
@@ -55,14 +51,7 @@ namespace DoorProject.Controllers
                 }
                 return StatusCode((int)result.CommandError.HttpCode, result.CommandError);
             }
-
-            return BadRequest(new RegistrationResponse()
-            {
-                Errors = new List<string>() {
-                        "Invalid payload"
-                    },
-                Success = false
-            });
+            return BadRequest(ModelState);
         }
 
         [Authorize]
@@ -70,6 +59,7 @@ namespace DoorProject.Controllers
         [Route("Logout")]
         public async Task<IActionResult> Logout()
         {
+            // Invoke AuthenticationService
             var result = await _authenticationService.LogOutUserAsync();
             if (result.Success)
             {
@@ -77,6 +67,5 @@ namespace DoorProject.Controllers
             }
             return StatusCode((int)result.CommandError.HttpCode, result.CommandError);
         }
-
     }
 }

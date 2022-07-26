@@ -33,12 +33,12 @@ namespace DoorProject.Controllers
             {
                 return BadRequest("There is no logged in user.");
             }
+            // Invoke DoorService
             var result = await _doorService.EnterOfficeAsync(loggedUser);
             if (result.Success)
             {
                 return Ok($"Welcome {result.Data.UserName}, you just entered in your office.");
             }
-
             return StatusCode((int)result.CommandError.HttpCode, result.CommandError);
         }
 
@@ -55,14 +55,13 @@ namespace DoorProject.Controllers
             {
                 return BadRequest("There is no logged in user.");
             }
+            // Invoke DoorService
             var result = await _doorService.EnterOfficeAsync(loggedUser);
             if (result.Success)
             {
                 return Ok($"Goodbye {result.Data.UserName}, you just left your office.");
             }
-
             return StatusCode((int)result.CommandError.HttpCode, result.CommandError);
         }
-
     }
 }

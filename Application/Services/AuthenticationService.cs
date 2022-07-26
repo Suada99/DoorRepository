@@ -33,7 +33,23 @@ namespace Application.Services
 
         public async Task<CommandResult<User>> RegisterUserAsync(UserRegistrationDto user)
         {
+            // Verify if requested user with requested username already exists
+            var existingUsername = await _userManager.FindByNameAsync(user.Username);
+            if (existingUsername != null)
+            {
+                return new CommandResult<User>
+                {
+                    Success = false,
+                    CommandError = new CommandError
+                    {
+                        HttpCode = System.Net.HttpStatusCode.Conflict,
+                        Code = "409",
+                        Description = $"User with username {user.Username} already exits!"
+                    }
+                };
+            }
 
+            // Verify if requested user with requested email already exists
             var existingUser = await _userManager.FindByEmailAsync(user.Email);
             if (existingUser != null)
             {

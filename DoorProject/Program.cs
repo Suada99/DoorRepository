@@ -166,7 +166,7 @@ internal class AuthResponsesOperationFilter : IOperationFilter
             }
 
             operation.Security = new List<OpenApiSecurityRequirement>
-                {
+            {
                     new OpenApiSecurityRequirement
                     {
                         {
@@ -181,7 +181,7 @@ internal class AuthResponsesOperationFilter : IOperationFilter
                             Array.Empty<string>()
                         }
                     }
-                };
+            };
         }
     }
 }
