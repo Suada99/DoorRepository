@@ -15,7 +15,7 @@ namespace Infrastructure.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<JWTToken> JWTTokens { get; set; }
-        public DbSet<UserTag> UserTags { get; set; }
+        public DbSet<Tag> Tags { get; set; }
 
         protected async void OnModelCreating(ModelBuilder modelBuilder)
         {

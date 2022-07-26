@@ -4,6 +4,7 @@ using Application.Services.Interfaces;
 using Application.Services.Interfacess;
 using AutoMapper;
 using Core.Entities;
+using Core.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -21,7 +22,14 @@ namespace Application.Services
         private readonly IJWTTokenService _jwtTokenService;
         private readonly IMapper _mapper;
         private readonly IWorkContext _workContext;
-        public AuthenticationService(UserManager<User> userManager, IMapper mapper, SignInManager<User> signInManager, IJWTTokenService jWTTokenService, IOptionsMonitor<JwtConfig> jwtConfig, IWorkContext workContext)
+        private readonly IRepository<Tag> _userTagRepository;
+
+        public AuthenticationService(UserManager<User> userManager,
+            IMapper mapper, SignInManager<User> signInManager,
+            IJWTTokenService jWTTokenService,
+            IOptionsMonitor<JwtConfig> jwtConfig,
+            IWorkContext workContext,
+            IRepository<Tag> userTagRepository)
         {
             _userManager = userManager;
             _mapper = mapper;
@@ -29,6 +37,7 @@ namespace Application.Services
             _jwtConfig = jwtConfig.CurrentValue;
             _jwtTokenService = jWTTokenService;
             _workContext = workContext;
+            _userTagRepository = userTagRepository;
         }
 
         public async Task<CommandResult<User>> RegisterUserAsync(UserRegistrationDto user)
@@ -67,6 +76,7 @@ namespace Application.Services
             var mappedUser = _mapper.Map<User>(user);
             mappedUser.EmailConfirmed = true;
 
+
             var isCreated = await _userManager.CreateAsync(mappedUser, user.Password);
             if (!isCreated.Succeeded)
             {
@@ -82,6 +92,17 @@ namespace Application.Services
                 };
             }
             await _userManager.AddToRoleAsync(mappedUser, user.Role.ToString());
+
+            //Assing pending tag to user on register
+            var tag = new Tag
+            {
+                Status = Core.Entities.Enum.TagStatus.Pending
+            };
+
+            await _userTagRepository.AddAsync(tag);
+            mappedUser.TagId = tag.Id;
+            await _userManager.UpdateAsync(mappedUser);
+
             return new CommandResult<User>
             {
                 Success = true,
@@ -119,6 +140,26 @@ namespace Application.Services
                         HttpCode = System.Net.HttpStatusCode.BadRequest,
                         Code = "400",
                         Description = $"User with email {requestUser.Email} couldn't log in!"
+                    }
+                };
+            }
+
+            //Validate Tag
+            bool valid = existingUser.Tag.Status == Core.Entities.Enum.TagStatus.Active;
+            if(existingUser.Tag.StartDate.HasValue && existingUser.Tag.ExpireDate.HasValue)
+            {
+                valid = existingUser.Tag.StartDate <= DateTime.Now && existingUser.Tag.StartDate >= DateTime.Now;
+            }
+            if (!valid)
+            {
+                return new CommandResult<AuthResult>
+                {
+                    Success = false,
+                    CommandError = new CommandError
+                    {
+                        HttpCode = System.Net.HttpStatusCode.Unauthorized,
+                        Code = "401",
+                        Description = $"User with email {requestUser.Email} couldn't log in because Tag status is {existingUser.Tag.Status.ToString()}!"
                     }
                 };
             }

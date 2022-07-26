@@ -1,8 +1,10 @@
 ﻿using Application.Models.DTOs;
 using Application.Services.Interfaces;
+using Core.Entities.Enum;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace DoorProject.Controllers
 {
@@ -36,6 +38,37 @@ namespace DoorProject.Controllers
                 return Ok(result.Data);
             }
             return StatusCode((int)result.CommandError.HttpCode, result.CommandError);
+        }
+
+        /// <summary>
+        /// Update user tag
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <response code="200">If user tag is updated successfully </response>
+        [HttpPut]
+        [Route("UpdateTag")]
+        public async Task<ActionResult> UpdateTag([FromBody] UpdateTagDto updateTagDto)
+        {
+            if (ModelState.IsValid)
+            {
+                if (updateTagDto.TagStatus.ToString() == string.Empty)
+                {
+                    return BadRequest("Tag status can not be null or empty");
+                }
+                // Invoke UserService
+                var result = await _userService.UpdateUserTag(updateTagDto.UserId, updateTagDto.TagStatus);
+                if (result.Success)
+                {
+                    return Ok();
+                }
+                return StatusCode((int)result.CommandError.HttpCode, result.CommandError);
+            }
+            return BadRequest(ModelState);
+        }
+        public class UpdateTagDto
+        {
+            public Guid UserId { get; set; }
+            public TagStatus TagStatus { get; set; }
         }
     }
 }

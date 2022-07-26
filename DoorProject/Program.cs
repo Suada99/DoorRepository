@@ -88,7 +88,6 @@ builder.Services.AddControllers(opt =>
 builder.Services.AddTransient<TokenManagerMiddleware>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IWorkContext, WorkContext>();
 builder.Services.AddScoped<IJWTTokenService, JWTTokenService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();

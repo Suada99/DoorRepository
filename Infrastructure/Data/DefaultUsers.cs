@@ -12,7 +12,14 @@ namespace Infrastructure.Data
             {
                 UserName = "admin@gmail.com",
                 Email = "admin@gmail.com",
-                EmailConfirmed = true
+                EmailConfirmed = true,
+                Tag = new Tag
+                {
+                    Id = Guid.NewGuid(),
+                    Status = TagStatus.Active,
+                    StartDate = DateTime.Now,
+                    ExpireDate = DateTime.Now.AddYears(3)
+                }
             };
             if (userManager.Users.All(u => u.Id != defaultUser.Id))
             {

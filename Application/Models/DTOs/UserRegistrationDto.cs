@@ -1,6 +1,5 @@
 ﻿using Core.Entities.Enum;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
 
 namespace Application.Models.DTOs
 {
