@@ -2,6 +2,7 @@
 using Application.Services.Interfacess;
 using Core.Entities;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Primitives;
 using System.Security.Claims;
 
@@ -10,10 +11,10 @@ namespace Application.Services
     public partial class WorkContext : IWorkContext
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly IUserService _userService;
+        private readonly UserManager<User> _userService;
         private readonly IJWTTokenService _jWTTokenService;
 
-        public WorkContext(IHttpContextAccessor httpContextAccessor, IUserService userService, IJWTTokenService jWTTokenService)
+        public WorkContext(IHttpContextAccessor httpContextAccessor, UserManager<User> userService, IJWTTokenService jWTTokenService)
         {
             _httpContextAccessor = httpContextAccessor;
             _userService = userService;
@@ -23,7 +24,7 @@ namespace Application.Services
         public virtual async Task<User> GetCurrentUserAsync()
         {
             var email = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Email);
-            return await _userService.GetUserByEmailAsync(email);
+            return await _userService.FindByEmailAsync(email);
         }
 
         public async Task<bool> IsCurrentActiveToken()

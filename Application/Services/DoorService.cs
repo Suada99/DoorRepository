@@ -1,12 +1,13 @@
 ﻿using Application.Services.Interfaces;
 using Core.Entities;
+using Core.Repositories;
 
 namespace Application.Services
 {
     public class DoorService : IDoorService
     {
-        private readonly IUserService _userService;
-        public DoorService(IUserService userService)
+        private readonly IRepository<User> _userService;
+        public DoorService(IRepository<User> userService)
         {
             _userService = userService;
         }
@@ -16,7 +17,7 @@ namespace Application.Services
             try
             {
                 user.InOffice = true;
-                await _userService.UpdateUserAsync(user);
+                await _userService.UpdateAsync(user);
             }
             catch (Exception e)
             {
@@ -56,7 +57,7 @@ namespace Application.Services
                     };
                 }
                 user.InOffice = false;
-                await _userService.UpdateUserAsync(user);
+                await _userService.UpdateAsync(user);
             }
             catch (Exception e)
             {

@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Core.Entities;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authorization;
-using Swashbuckle.AspNetCore.SwaggerGen;
 using AutoMapper;
 using Infrastructure;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -18,6 +17,9 @@ using Application.Services.Interfaces;
 using Application.Services.Interfacess;
 using Application.Services;
 using Application;
+using Microsoft.AspNetCore.Identity;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,33 +29,36 @@ builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtConfi
 builder.Services.AddDbContext<ApplicationDbContext>(x =>
                                 x.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// For authentication
+var _key = builder.Configuration["JwtConfig:Secret"];
+var _issuer = builder.Configuration["JwtConfig:Issuer"];
+var _audience = builder.Configuration["JwtConfig:Audience"];
+var _expirtyMinutes = builder.Configuration["JwtConfig:ExpiryMinutes"];
 
-var key = Encoding.ASCII.GetBytes(builder.Configuration["JwtConfig:Secret"]);
 
-var tokenValidationParams = new TokenValidationParameters
+// Configuration for token
+builder.Services.AddAuthentication(x =>
 {
-    ValidateIssuerSigningKey = true,
-    IssuerSigningKey = new SymmetricSecurityKey(key),
-    ValidateIssuer = false,
-    ValidateAudience = false,
-    ValidateLifetime = true,
-    RequireExpirationTime = false,
-    ClockSkew = TimeSpan.Zero
-};
-
-builder.Services.AddSingleton(tokenValidationParams);
-
-builder.Services.AddAuthentication(options =>
+    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(x =>
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(jwt =>
-{
-    jwt.SaveToken = true;
-    jwt.TokenValidationParameters = tokenValidationParams;
+    x.RequireHttpsMetadata = false;
+    x.SaveToken = true;
+    x.TokenValidationParameters = new TokenValidationParameters()
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidAudience = _audience,
+        ValidIssuer = _issuer,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_key)),
+        ClockSkew = TimeSpan.FromMinutes(Convert.ToDouble(_expirtyMinutes))
+    };
 });
+
 
 builder.Services.AddIdentity<User, Role>(options => options.SignIn.RequireConfirmedAccount = true)
             .AddEntityFrameworkStores<ApplicationDbContext>();
@@ -74,7 +79,12 @@ builder.Services.AddControllers(opt =>
 {
     var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
     opt.Filters.Add(new AuthorizeFilter(policy));
-});
+}).AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+}); ;
 builder.Services.AddTransient<TokenManagerMiddleware>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
@@ -82,11 +92,21 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IWorkContext, WorkContext>();
 builder.Services.AddScoped<IJWTTokenService, JWTTokenService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<IDoorService, DoorService>();
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+
+builder.Services.AddCors(c =>
+{
+    c.AddPolicy("CorsPolicy", options => options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+});
+
+
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(c =>
 {
+
     c.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "Door",
@@ -99,28 +119,48 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 
-    c.AddSecurityDefinition("BearerAuth", new OpenApiSecurityScheme
+
+    // To enable authorization using swagger (Jwt)
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
     {
-        Type = SecuritySchemeType.Http,
-        Scheme = JwtBearerDefaults.AuthenticationScheme.ToLowerInvariant(),
-        In = ParameterLocation.Header,
         Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer",
         BearerFormat = "JWT",
-        Description = "JWT Authorization header using the Bearer scheme."
+        In = ParameterLocation.Header,
+        Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer {token}\"",
     });
 
-    c.OperationFilter<AuthResponsesOperationFilter>();
-});
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+                {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        new string[] {}
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("Open", builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+                    }
+                });
+
 });
 
 
 builder.Services.AddDistributedMemoryCache();
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var userManager = services.GetRequiredService<UserManager<User>>();
+    var roleManager = services.GetRequiredService<RoleManager<Role>>();
+    await DefaultRoles.SeedAsync(roleManager);
+    await DefaultUsers.SeedSuperAdminAsync(userManager);
+}
 // Configure the HTTP request pipeline.
 
 if (builder.Environment.IsDevelopment())
@@ -128,60 +168,16 @@ if (builder.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Door v1"));
+
 }
 
 app.UseHttpsRedirection();
 
 app.UseRouting();
-
+app.UseCors("CorsPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<TokenManagerMiddleware>();
-app.UseCors("Open");
 app.MapControllers();
 
 app.Run();
-
-internal class AuthResponsesOperationFilter : IOperationFilter
-{
-    public void Apply(OpenApiOperation operation, OperationFilterContext context)
-    {
-        var attributes = context.MethodInfo.DeclaringType.GetCustomAttributes(true)
-                            .Union(context.MethodInfo.GetCustomAttributes(true));
-
-        if (attributes.OfType<IAllowAnonymous>().Any())
-        {
-            return;
-        }
-
-        var authAttributes = attributes.OfType<IAuthorizeData>();
-
-        if (authAttributes.Any())
-        {
-            operation.Responses["401"] = new OpenApiResponse { Description = "Unauthorized" };
-
-            if (authAttributes.Any(att => !String.IsNullOrWhiteSpace(att.Roles) || !String.IsNullOrWhiteSpace(att.Policy)))
-            {
-                operation.Responses["403"] = new OpenApiResponse { Description = "Forbidden" };
-            }
-
-            operation.Security = new List<OpenApiSecurityRequirement>
-            {
-                    new OpenApiSecurityRequirement
-                    {
-                        {
-                            new OpenApiSecurityScheme
-                            {
-                                Reference = new OpenApiReference
-                                {
-                                    Id = "BearerAuth",
-                                    Type = ReferenceType.SecurityScheme
-                                }
-                            },
-                            Array.Empty<string>()
-                        }
-                    }
-            };
-        }
-    }
-}

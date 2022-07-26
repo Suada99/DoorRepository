@@ -64,7 +64,6 @@ namespace Application.Services
                     }
                 };
             }
-
             var mappedUser = _mapper.Map<User>(user);
             mappedUser.EmailConfirmed = true;
 
@@ -82,6 +81,7 @@ namespace Application.Services
                     }
                 };
             }
+            await _userManager.AddToRoleAsync(mappedUser, user.Role.ToString());
             return new CommandResult<User>
             {
                 Success = true,
@@ -89,7 +89,7 @@ namespace Application.Services
             };
         }
 
-        public async Task<CommandResult<AuthResult>> LogInUserAsync(UserLoginRequest requestUser)
+        public async Task<CommandResult<AuthResult>> LogInUserAsync(UserLoginRequestDto requestUser)
         {
             var existingUser = await _userManager.FindByEmailAsync(requestUser.Email);
 
@@ -160,39 +160,53 @@ namespace Application.Services
 
         private async Task<AuthResult> GenerateJwtToken(User user)
         {
-            var jwtTokenHandler = new JwtSecurityTokenHandler();
-
-            var key = Encoding.ASCII.GetBytes(_jwtConfig.Secret);
-
-            var tokenDescriptor = new SecurityTokenDescriptor
+            AuthResult authResult = new AuthResult();
+            try
             {
-                Subject = new ClaimsIdentity(new[]
+                var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtConfig.Secret));
+                var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+                var claims = new List<Claim>()
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
+                new Claim(JwtRegisteredClaimNames.Jti, user.Id.ToString()),
+                new Claim(ClaimTypes.Name,  user.UserName),
+                new Claim(ClaimTypes.Email,  user.Email),
+                new Claim("UserId", user.Id.ToString())
+            };
+
+                var roles = await _userManager.GetRolesAsync(user);
+                claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+
+
+                var token = new JwtSecurityToken(
+                    issuer: _jwtConfig.Issuer,
+                    audience: _jwtConfig.Audience,
+                    claims: claims,
+                    expires: DateTime.Now.AddMinutes(Convert.ToDouble(_jwtConfig.ExpiryMinutes)),
+                    signingCredentials: signingCredentials
+               );
+
+                var encodedToken = new JwtSecurityTokenHandler().WriteToken(token);
+
+                var generatedToken = new JWTToken()
                 {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Email, user.Email),
-                    new Claim(ClaimTypes.Name, user.UserName),
-                }),
-                Expires = DateTime.UtcNow.AddMinutes(5),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
+                    UserId = user.Id,
+                    AddedDate = DateTime.UtcNow,
+                    ExpiryDate = DateTime.Now.AddMinutes(Convert.ToDouble(_jwtConfig.ExpiryMinutes)),
+                    Token = encodedToken
+                };
 
-            var token = jwtTokenHandler.CreateToken(tokenDescriptor);
-            var jwtToken = jwtTokenHandler.WriteToken(token);
-            var generatedToken = new JWTToken()
+                await _jwtTokenService.InsertJWTTokenAsync(generatedToken);
+                authResult.Success = true;
+                authResult.Token = encodedToken;
+
+            }
+            catch (Exception e)
             {
-                UserId = user.Id,
-                AddedDate = DateTime.UtcNow,
-                ExpiryDate = tokenDescriptor.Expires.Value,
-                Token = jwtToken
-            };
-
-            await _jwtTokenService.InsertJWTTokenAsync(generatedToken);
-
-            return new AuthResult()
-            {
-                Token = jwtToken,
-                Success = true
-            };
+                authResult.Success = false;
+            }
+            return authResult;
         }
 
     }

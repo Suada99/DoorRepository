@@ -17,6 +17,11 @@ namespace DoorProject.Controllers
             _authenticationService = authenticationService;
         }
 
+        /// <summary>
+        /// Register new user
+        /// </summary>
+        /// <param name="user"></param>
+        /// <response code="200">If user is registered successfully </response>
         [AllowAnonymous]
         [HttpPost]
         [Route("Register")]
@@ -35,10 +40,16 @@ namespace DoorProject.Controllers
             return BadRequest(ModelState);
         }
 
+        /// <summary>
+        /// Log in with an exisiting user
+        /// </summary>
+        /// <param name="user"></param>
+        /// <response code="200">If user is logged in successfully </response>
+        /// <response code="401">If authentication isn't done </response>
         [AllowAnonymous]
         [HttpPost]
         [Route("Login")]
-        public async Task<IActionResult> Login([FromBody] UserLoginRequest user)
+        public async Task<IActionResult> Login([FromBody] UserLoginRequestDto user)
         {
             if (ModelState.IsValid)
             {
@@ -54,6 +65,11 @@ namespace DoorProject.Controllers
             return BadRequest(ModelState);
         }
 
+        /// <summary>
+        /// Logs out of system
+        /// </summary>
+        /// <response code="200">If user is logged out successfully </response>
+        /// <response code="401">If authentication isn't done </response>
         [Authorize]
         [HttpPost]
         [Route("Logout")]

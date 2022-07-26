@@ -2,7 +2,7 @@
 
 namespace Application.Models.DTOs
 {
-    public class UserLoginRequest
+    public class UserLoginRequestDto
     {
         [Required]
         [EmailAddress]
