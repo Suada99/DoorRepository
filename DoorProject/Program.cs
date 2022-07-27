@@ -83,7 +83,7 @@ builder.Services.AddControllers(opt =>
 {
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 }); ;
 builder.Services.AddTransient<TokenManagerMiddleware>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));

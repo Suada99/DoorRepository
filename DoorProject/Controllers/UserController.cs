@@ -1,5 +1,6 @@
 ﻿using Application.Models.DTOs;
 using Application.Services.Interfaces;
+using Core.Entities.Enum;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,15 +26,22 @@ namespace DoorProject.Controllers
         /// <returns></returns>
         /// <response code="200">If all users are returned successfully </response>
         /// <response code="401">If authentication isn't done </response>
-        /// <response code="403">If you are forbidden </response>
+        /// <response code="403">Forbidden, you are not allowed.</response>
         [HttpGet]
         [Route("GetUsers")]
-        public async Task<ActionResult<List<UserDto>>> GetAllUsers()
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        public async Task<ActionResult<GetAllUsersResponse>> GetAllUsers([FromQuery] TagStatus? tagStatus)
         {
-            var result = await _userService.GetAllUsers();
+            var result = await _userService.GetAllUsers(tagStatus);
             if (result.Success)
             {
-                return Ok(result.Data);
+                return Ok(new GetAllUsersResponse
+                {
+                    Users = result.Data
+                });
             }
             return StatusCode((int)result.CommandError.HttpCode, result.CommandError);
         }
@@ -45,6 +53,9 @@ namespace DoorProject.Controllers
         /// <response code="200">If user tag is updated successfully </response>
         [HttpPut]
         [Route("UpdateTag")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<ActionResult> UpdateTag([FromBody] UpdateTagDto updateTagDto)
         {
             if (ModelState.IsValid)
@@ -63,6 +74,5 @@ namespace DoorProject.Controllers
             }
             return BadRequest(ModelState);
         }
-       
     }
 }

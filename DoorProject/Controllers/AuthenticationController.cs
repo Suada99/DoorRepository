@@ -2,6 +2,7 @@
 using Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Cryptography.Xml;
 
 namespace DoorProject.Controllers
 {
@@ -26,6 +27,9 @@ namespace DoorProject.Controllers
         [AllowAnonymous]
         [HttpPost]
         [Route("Register")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<ActionResult> Register([FromBody] UserRegistrationDto user)
         {
             if (ModelState.IsValid)
@@ -36,7 +40,7 @@ namespace DoorProject.Controllers
                 {
                     return Ok();
                 }
-                return StatusCode(Int32.Parse(result.CommandError.Code), result.CommandError);
+                return StatusCode((int)result.CommandError.HttpCode, result.CommandError);
             }
             return BadRequest(ModelState);
         }
@@ -50,6 +54,9 @@ namespace DoorProject.Controllers
         [AllowAnonymous]
         [HttpPost]
         [Route("Login")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<ActionResult> Login([FromBody] UserLoginRequestDto user)
         {
             if (ModelState.IsValid)
@@ -74,6 +81,9 @@ namespace DoorProject.Controllers
         [Authorize]
         [HttpPost]
         [Route("Logout")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<ActionResult> Logout()
         {
             // Invoke AuthenticationService

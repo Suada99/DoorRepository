@@ -13,25 +13,26 @@ namespace Application.Services
     {
         private readonly IRepository<User> _userRepository;
         private readonly IRepository<Tag> _tagRepository;
-        private readonly IRepository<Role> _roleRepository;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
 
-        public UserService(IRepository<User> userRepository, IRepository<Tag> tagRepository, IRepository<Role> roleRepository, UserManager<User> userManager, IMapper mapper)
+        public UserService(IRepository<User> userRepository, IRepository<Tag> tagRepository, UserManager<User> userManager, IMapper mapper)
         {
             _userRepository = userRepository;
             _tagRepository = tagRepository;
-            _roleRepository = roleRepository;
             _userManager = userManager;
             _mapper = mapper;
         }
 
-        public async Task<CommandResult<List<UserDto>>> GetAllUsers()
+        public async Task<CommandResult<List<UserDto>>> GetAllUsers(TagStatus? tagStatus)
         {
+            var status = tagStatus.ToString();
             // Response object 
             var responseUsers = new List<UserDto>();
+
             // Get all users
             var users = await _userRepository.GetAllAsync();
+
             foreach (var x in users)
             {
 
@@ -45,12 +46,23 @@ namespace Application.Services
                 });
 
             }
+            if (status != null)
+            {
+                responseUsers = responseUsers.Where(x => x.TagStatus.Contains(status)).ToList();
+            }
+
             if (!responseUsers.Any())
             {
                 return new CommandResult<List<UserDto>>
                 {
                     Success = false,
                     TotalDataCount = 0,
+                    CommandError = new CommandError
+                    {
+                        Code = "404",
+                        Description = "No users found for requested tag status",
+                        HttpCode = System.Net.HttpStatusCode.NotFound
+                    }
                 };
             }
             // Response data

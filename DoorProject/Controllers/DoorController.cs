@@ -26,7 +26,10 @@ namespace DoorProject.Controllers
         /// <returns>Success true followed with a message if you entered in your office</returns>
         [HttpPost]
         [Route("EnterOffice")]
-        public async Task<IActionResult> EnterOffice()
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        public async Task<ActionResult> EnterOffice()
         {
             var loggedUser = await _workContext.GetCurrentUserAsync();
             if (loggedUser == null)
@@ -48,7 +51,10 @@ namespace DoorProject.Controllers
         /// <returns>Success true followed with a message if you left your office</returns>
         [HttpPost]
         [Route("LeaveOffice")]
-        public async Task<IActionResult> LeaveOffice()
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        public async Task<ActionResult> LeaveOffice()
         {
             var loggedUser = await _workContext.GetCurrentUserAsync();
             if (loggedUser == null)

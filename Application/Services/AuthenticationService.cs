@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Security.Claims;
 using System.Text;
 
@@ -52,7 +53,7 @@ namespace Application.Services
                     Success = false,
                     CommandError = new CommandError
                     {
-                        HttpCode = System.Net.HttpStatusCode.Conflict,
+                        HttpCode = HttpStatusCode.Conflict,
                         Code = "409",
                         Description = $"User with username {user.Username} already exits!"
                     }
@@ -155,10 +156,18 @@ namespace Application.Services
 
             //Validate Tag
             var tag = await _userTagRepository.GetByIdAsync(existingUser.TagId);
-            bool valid = tag.Status == Core.Entities.Enum.TagStatus.Active;
+            bool valid = tag.Status == TagStatus.Active;
             if (tag.StartDate.HasValue && tag.ExpireDate.HasValue)
             {
                 valid = tag.StartDate <= DateTime.Now && tag.ExpireDate >= DateTime.Now;
+                if (!valid)
+                {
+                    if (tag.Status == TagStatus.Active)
+                    {
+                        tag.Status = TagStatus.Expired;
+                        await _userTagRepository.UpdateAsync(tag);
+                    }
+                }
             }
             if (!valid)
             {
