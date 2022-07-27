@@ -4,6 +4,7 @@ using Application.Services.Interfaces;
 using Application.Services.Interfacess;
 using AutoMapper;
 using Core.Entities;
+using Core.Entities.Enum;
 using Core.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
@@ -40,13 +41,13 @@ namespace Application.Services
             _userTagRepository = userTagRepository;
         }
 
-        public async Task<CommandResult<User>> RegisterUserAsync(UserRegistrationDto user)
+        public async Task<CommandResult<bool>> RegisterUserAsync(UserRegistrationDto user)
         {
             // Verify if requested user with requested username already exists
             var existingUsername = await _userManager.FindByNameAsync(user.Username);
             if (existingUsername != null)
             {
-                return new CommandResult<User>
+                return new CommandResult<bool>
                 {
                     Success = false,
                     CommandError = new CommandError
@@ -62,7 +63,7 @@ namespace Application.Services
             var existingUser = await _userManager.FindByEmailAsync(user.Email);
             if (existingUser != null)
             {
-                return new CommandResult<User>
+                return new CommandResult<bool>
                 {
                     Success = false,
                     CommandError = new CommandError
@@ -70,6 +71,18 @@ namespace Application.Services
                         HttpCode = System.Net.HttpStatusCode.Conflict,
                         Code = "409",
                         Description = $"User with email {user.Email} already exits!"
+                    }
+                };
+            }
+            if (user.Role == Roles.Admin)
+            {
+                return new CommandResult<bool>
+                {
+                    Success = false,
+                    CommandError = new CommandError
+                    {
+                        Code = "409",
+                        Description = "There is an Admin role, please choose between Guest and Employee role to register."
                     }
                 };
             }
@@ -83,11 +96,10 @@ namespace Application.Services
 
             await _userTagRepository.AddAsync(tag);
             mappedUser.TagId = tag.Id;
-
             var isCreated = await _userManager.CreateAsync(mappedUser, user.Password);
             if (!isCreated.Succeeded)
             {
-                return new CommandResult<User>
+                return new CommandResult<bool>
                 {
                     Success = false,
                     CommandError = new CommandError
@@ -100,11 +112,10 @@ namespace Application.Services
             }
             await _userManager.AddToRoleAsync(mappedUser, user.Role.ToString());
 
-
-            return new CommandResult<User>
+            return new CommandResult<bool>
             {
                 Success = true,
-                Data = mappedUser
+                Data = true
             };
         }
 
@@ -143,9 +154,9 @@ namespace Application.Services
             }
 
             //Validate Tag
-            var tag =await  _userTagRepository.GetByIdAsync(existingUser.TagId);
+            var tag = await _userTagRepository.GetByIdAsync(existingUser.TagId);
             bool valid = tag.Status == Core.Entities.Enum.TagStatus.Active;
-            if(tag.StartDate.HasValue && tag.ExpireDate.HasValue)
+            if (tag.StartDate.HasValue && tag.ExpireDate.HasValue)
             {
                 valid = tag.StartDate <= DateTime.Now && tag.ExpireDate >= DateTime.Now;
             }

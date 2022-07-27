@@ -1,10 +1,8 @@
 ﻿using Application.Models.DTOs;
 using Application.Services.Interfaces;
-using Core.Entities.Enum;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 
 namespace DoorProject.Controllers
 {

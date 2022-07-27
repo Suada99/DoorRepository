@@ -92,6 +92,7 @@ builder.Services.AddScoped<IWorkContext, WorkContext>();
 builder.Services.AddScoped<IJWTTokenService, JWTTokenService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IDoorService, DoorService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 
 

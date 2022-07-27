@@ -1,5 +1,4 @@
-﻿using Core.Entities.Enum;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 
 namespace Core.Entities
 {

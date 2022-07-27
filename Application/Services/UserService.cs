@@ -13,24 +13,39 @@ namespace Application.Services
     {
         private readonly IRepository<User> _userRepository;
         private readonly IRepository<Tag> _tagRepository;
+        private readonly IRepository<Role> _roleRepository;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
 
-        public UserService(IRepository<User> userRepository,IRepository<Tag> tagRepository, UserManager<User> userManager, IMapper mapper)
+        public UserService(IRepository<User> userRepository, IRepository<Tag> tagRepository, IRepository<Role> roleRepository, UserManager<User> userManager, IMapper mapper)
         {
             _userRepository = userRepository;
             _tagRepository = tagRepository;
+            _roleRepository = roleRepository;
             _userManager = userManager;
             _mapper = mapper;
         }
 
         public async Task<CommandResult<List<UserDto>>> GetAllUsers()
         {
+            // Response object 
+            var responseUsers = new List<UserDto>();
             // Get all users
             var users = await _userRepository.GetAllAsync();
-            // Map to DTO
-            var mappedUsers = _mapper.Map<List<UserDto>>(users);
-            if (!mappedUsers.Any())
+            foreach (var x in users)
+            {
+
+                responseUsers.Add(new UserDto
+                {
+                    Role = (await _userManager.GetRolesAsync(x)).FirstOrDefault() ?? String.Empty,
+                    Name = x.UserName,
+                    Email = x.Email,
+                    Id = x.Id,
+                    TagStatus = _tagRepository.GetByIdAsync(x.TagId).Result.Status.ToString() ?? String.Empty,
+                });
+
+            }
+            if (!responseUsers.Any())
             {
                 return new CommandResult<List<UserDto>>
                 {
@@ -43,7 +58,7 @@ namespace Application.Services
             {
                 Success = true,
                 TotalDataCount = users.Count,
-                Data = mappedUsers
+                Data = responseUsers
             };
 
         }
@@ -84,7 +99,7 @@ namespace Application.Services
                     userTag.StartDate = DateTime.Now;
                     userTag.ExpireDate = DateTime.Now.AddHours(Defaults.GuestLifeTime);
                     break;
-                default:break;
+                default: break;
             }
 
             user.Tag = userTag;
@@ -93,7 +108,7 @@ namespace Application.Services
             return new CommandResult<bool>
             {
                 Success = true,
-                Data = true          
+                Data = true
             };
 
         }

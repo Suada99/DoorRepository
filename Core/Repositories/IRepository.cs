@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using Core.Entities;
+using System.Linq.Expressions;
 
 namespace Core.Repositories
 {

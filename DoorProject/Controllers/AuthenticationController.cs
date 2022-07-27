@@ -22,10 +22,11 @@ namespace DoorProject.Controllers
         /// </summary>
         /// <param name="user"></param>
         /// <response code="200">If user is registered successfully </response>
+        /// <response code="409">If requested user name, email or role already exists </response>
         [AllowAnonymous]
         [HttpPost]
         [Route("Register")]
-        public async Task<IActionResult> Register([FromBody] UserRegistrationDto user)
+        public async Task<ActionResult> Register([FromBody] UserRegistrationDto user)
         {
             if (ModelState.IsValid)
             {
@@ -35,7 +36,7 @@ namespace DoorProject.Controllers
                 {
                     return Ok();
                 }
-                return StatusCode((int)result.CommandError.HttpCode, result.CommandError);
+                return StatusCode(Int32.Parse(result.CommandError.Code), result.CommandError);
             }
             return BadRequest(ModelState);
         }
@@ -49,7 +50,7 @@ namespace DoorProject.Controllers
         [AllowAnonymous]
         [HttpPost]
         [Route("Login")]
-        public async Task<IActionResult> Login([FromBody] UserLoginRequestDto user)
+        public async Task<ActionResult> Login([FromBody] UserLoginRequestDto user)
         {
             if (ModelState.IsValid)
             {
@@ -73,7 +74,7 @@ namespace DoorProject.Controllers
         [Authorize]
         [HttpPost]
         [Route("Logout")]
-        public async Task<IActionResult> Logout()
+        public async Task<ActionResult> Logout()
         {
             // Invoke AuthenticationService
             var result = await _authenticationService.LogOutUserAsync();
