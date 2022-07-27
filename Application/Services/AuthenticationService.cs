@@ -220,7 +220,7 @@ namespace Application.Services
 
         private async Task<AuthResult> GenerateJwtToken(User user)
         {
-            AuthResult authResult = new AuthResult();
+            AuthResult authResult = new();
             try
             {
                 var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtConfig.Secret));

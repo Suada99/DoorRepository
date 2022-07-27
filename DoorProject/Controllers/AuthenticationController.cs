@@ -2,7 +2,6 @@
 using Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Cryptography.Xml;
 
 namespace DoorProject.Controllers
 {
