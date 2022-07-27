@@ -17,7 +17,7 @@ namespace Infrastructure.Data
         public DbSet<JWTToken> JWTTokens { get; set; }
         public DbSet<Tag> Tags { get; set; }
 
-        protected async void OnModelCreating(ModelBuilder modelBuilder)
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<IdentityUserLogin<Guid>>().ToTable("UserLogins");

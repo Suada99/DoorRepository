@@ -75,7 +75,14 @@ namespace Application.Services
             }
             var mappedUser = _mapper.Map<User>(user);
             mappedUser.EmailConfirmed = true;
+            //Assing pending tag to user on register
+            var tag = new Tag
+            {
+                Status = Core.Entities.Enum.TagStatus.Pending
+            };
 
+            await _userTagRepository.AddAsync(tag);
+            mappedUser.TagId = tag.Id;
 
             var isCreated = await _userManager.CreateAsync(mappedUser, user.Password);
             if (!isCreated.Succeeded)
@@ -93,15 +100,6 @@ namespace Application.Services
             }
             await _userManager.AddToRoleAsync(mappedUser, user.Role.ToString());
 
-            //Assing pending tag to user on register
-            var tag = new Tag
-            {
-                Status = Core.Entities.Enum.TagStatus.Pending
-            };
-
-            await _userTagRepository.AddAsync(tag);
-            mappedUser.TagId = tag.Id;
-            await _userManager.UpdateAsync(mappedUser);
 
             return new CommandResult<User>
             {
@@ -145,10 +143,11 @@ namespace Application.Services
             }
 
             //Validate Tag
-            bool valid = existingUser.Tag.Status == Core.Entities.Enum.TagStatus.Active;
-            if(existingUser.Tag.StartDate.HasValue && existingUser.Tag.ExpireDate.HasValue)
+            var tag =await  _userTagRepository.GetByIdAsync(existingUser.TagId);
+            bool valid = tag.Status == Core.Entities.Enum.TagStatus.Active;
+            if(tag.StartDate.HasValue && tag.ExpireDate.HasValue)
             {
-                valid = existingUser.Tag.StartDate <= DateTime.Now && existingUser.Tag.StartDate >= DateTime.Now;
+                valid = tag.StartDate <= DateTime.Now && tag.ExpireDate >= DateTime.Now;
             }
             if (!valid)
             {
@@ -159,7 +158,7 @@ namespace Application.Services
                     {
                         HttpCode = System.Net.HttpStatusCode.Unauthorized,
                         Code = "401",
-                        Description = $"User with email {requestUser.Email} couldn't log in because Tag status is {existingUser.Tag.Status.ToString()}!"
+                        Description = $"User with email {requestUser.Email} couldn't log in because Tag status is {tag.Status.ToString()}!"
                     }
                 };
             }

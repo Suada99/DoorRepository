@@ -7,6 +7,6 @@ namespace Core.Entities
     {
         public bool InOffice { get; set; }
         public Guid TagId { get; set; }
-        public Tag Tag { get; set; }
+        public virtual Tag Tag { get; set; }
     }
 }

@@ -65,10 +65,6 @@ namespace DoorProject.Controllers
             }
             return BadRequest(ModelState);
         }
-        public class UpdateTagDto
-        {
-            public Guid UserId { get; set; }
-            public TagStatus TagStatus { get; set; }
-        }
+       
     }
 }
