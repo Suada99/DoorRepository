@@ -27,10 +27,21 @@ namespace DoorProject
                 return;
             }
 
+            if (endpoint.DisplayName.Contains("Logout")|| endpoint.DisplayName.Contains("LeaveOffice"))
+            {
+                await next(context);
+                return;
+            }
+
             // Get current user
             var user = await _workContext.GetCurrentUserAsync();
             var tag = await _userTagRepository.GetByIdAsync(user.TagId);
             bool valid = tag.Status == Core.Entities.Enum.TagStatus.Active;
+            if (!valid)
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                return;
+            }
             if (tag.StartDate.HasValue && tag.ExpireDate.HasValue)
             {
                 valid = tag.StartDate <= DateTime.Now && tag.ExpireDate >= DateTime.Now;
