@@ -69,7 +69,7 @@ namespace Application.Services
                     Success = false,
                     CommandError = new CommandError
                     {
-                        HttpCode = System.Net.HttpStatusCode.Conflict,
+                        HttpCode = HttpStatusCode.Conflict,
                         Code = "409",
                         Description = $"User with email {user.Email} already exits!"
                     }
@@ -89,10 +89,10 @@ namespace Application.Services
             }
             var mappedUser = _mapper.Map<User>(user);
             mappedUser.EmailConfirmed = true;
-            //Assing pending tag to user on register
+            //Assign pending tag to user on register
             var tag = new Tag
             {
-                Status = Core.Entities.Enum.TagStatus.Pending
+                Status = TagStatus.Pending
             };
 
             await _userTagRepository.AddAsync(tag);
@@ -105,7 +105,7 @@ namespace Application.Services
                     Success = false,
                     CommandError = new CommandError
                     {
-                        HttpCode = System.Net.HttpStatusCode.InternalServerError,
+                        HttpCode = HttpStatusCode.InternalServerError,
                         Code = "500",
                         Description = $"Error raised during creating user!"
                     }
@@ -131,7 +131,7 @@ namespace Application.Services
                     Success = false,
                     CommandError = new CommandError
                     {
-                        HttpCode = System.Net.HttpStatusCode.NotFound,
+                        HttpCode = HttpStatusCode.NotFound,
                         Code = "404",
                         Description = $"User with email {requestUser.Email} does not exits!"
                     }
@@ -147,7 +147,7 @@ namespace Application.Services
                     Success = false,
                     CommandError = new CommandError
                     {
-                        HttpCode = System.Net.HttpStatusCode.BadRequest,
+                        HttpCode = HttpStatusCode.BadRequest,
                         Code = "400",
                         Description = $"User with email {requestUser.Email} couldn't log in!"
                     }
@@ -176,7 +176,7 @@ namespace Application.Services
                     Success = false,
                     CommandError = new CommandError
                     {
-                        HttpCode = System.Net.HttpStatusCode.Unauthorized,
+                        HttpCode = HttpStatusCode.Unauthorized,
                         Code = "401",
                         Description = $"User with email {requestUser.Email} couldn't log in because Tag status is {tag.Status.ToString()}!"
                     }
@@ -207,7 +207,7 @@ namespace Application.Services
                     {
                         Description = e.Message,
                         Code = "500",
-                        HttpCode = System.Net.HttpStatusCode.InternalServerError
+                        HttpCode = HttpStatusCode.InternalServerError
                     }
                 };
             }

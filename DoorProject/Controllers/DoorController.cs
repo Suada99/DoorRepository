@@ -62,7 +62,7 @@ namespace DoorProject.Controllers
                 return BadRequest("There is no logged in user.");
             }
             // Invoke DoorService
-            var result = await _doorService.EnterOfficeAsync(loggedUser);
+            var result = await _doorService.LeaveOfficeAsync(loggedUser);
             if (result.Success)
             {
                 return Ok($"Goodbye {result.Data.UserName}, you just left your office.");

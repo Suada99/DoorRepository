@@ -1,4 +1,5 @@
-﻿using Application.Models.DTOs;
+﻿using Application.Models;
+using Application.Models.DTOs;
 using Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -56,7 +57,7 @@ namespace DoorProject.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
-        public async Task<ActionResult> Login([FromBody] UserLoginRequestDto user)
+        public async Task<ActionResult<AuthResult>> Login([FromBody] UserLoginRequestDto user)
         {
             if (ModelState.IsValid)
             {
