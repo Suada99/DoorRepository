@@ -64,6 +64,5 @@ namespace Application.Services
                 : authorizationHeader.Single().Split(" ").Last();
         }
 
-        public virtual bool IsAdmin { get; set; }
     }
 }
