@@ -4,6 +4,8 @@ namespace Application.Services.Interfacess
 {
     public interface IWorkContext
     {
+        bool IsAdmin { get; set; }
+
         Task DeactivateCurrentTokenAsync();
         Task DeactivateTokenAsync(string token);
         Task<User> GetCurrentUserAsync();
